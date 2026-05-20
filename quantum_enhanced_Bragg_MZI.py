@@ -2489,7 +2489,7 @@ def plotPhaseUncertainty(sigma_values, N):
 
     ax.grid(ls='--',alpha=.5)
 
-    plt.savefig(im_path + "/PS_Bragg_0th_2nd_order_eps.pdf", bbox_inches='tight')
+    plt.savefig(im_path + "/PS_Bragg_VS_and_parasitic_diff.pdf", bbox_inches='tight')
     # plt.show()
 
 #### plot analytical vs numerical solution ####
