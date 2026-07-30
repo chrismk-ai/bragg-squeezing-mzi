@@ -5,11 +5,11 @@ Date:           2026-05-12
 Description:    Central document for generating the figures from the main text 
                 and the Appendix. This includes calculations of the time 
                 evolution of resonant first-order Bragg diffraction (cf. main 
-                text Fig. 1 and 10), interference signals of an MZI (cf. main text 
+                text Fig. 1 and 11), interference signals of an MZI (cf. main text 
                 Fig. 3), quasi-probability distributions of atomic states on the 
                 angular momentum sphere (cf. main text Fig. 4), as well as phase
                 uncertainties of the MZI operated with a One-Axis-Twisted (OAT)
-                states polarized along S_x. (cf. main text Figs. 5-9)
+                states polarized along S_x. (cf. main text Figs. 5-10)
 """
 
 #%%
@@ -19,6 +19,7 @@ from scipy.integrate import solve_ivp
 import multiprocessing as mp
 import time
 import os
+import matplotlib as mpl
 from matplotlib.legend_handler import HandlerTuple
 from matplotlib.colors import ListedColormap
 import math
@@ -75,7 +76,6 @@ dark_red='#310000'
 gray='#CDCDCD'
 
 #### Angular Momentum Quadratures: Means and Variances #####
-
 def mean_jx(N: int, mu: float): 
     """
     Parameters
@@ -218,7 +218,6 @@ def REcov_jyjz(N: int, mu, alpha, alignWithXYPlane = False):
     )
 
 #### Optimal squeezing parameter ####
-
 def mu_opt(N: int):
     """
     Parameters
@@ -236,7 +235,6 @@ def mu_opt(N: int):
     return mu[np.argmin(var_jz(N, mu, 0, True)/mean_jx(N, mu)**2)]
 
 #### initial inclination of OAT state w.r.t. the equator
-
 def alpha_0(N: int, mu):
     """inclination of the OAT ellipse w.r.t. equator of the angular momentum
     sphere of the state 
@@ -257,9 +255,7 @@ def alpha_0(N: int, mu):
     return np.arctan2(B, A) / 2
 
 ############ Analytical results ############
-
 ############ Definitions ############
-
 def t(v, tau_p):
     f = np.sqrt(1 + v**2)
     arg = f * tau_p / 2
@@ -385,7 +381,6 @@ def gammaIJ(epsilon, v, tau_p):
     return numerator / (64 * f**4 * (f - v))
 
 #### Functions that need to be weighted with the momentum distribution ####
-
 def A0_0(vk, epsilon, NO_ADJ_CLASSES=False):
     """epsilon^0-magnitude part of the integrand of the population-difference 
     contribution to the interference signal 
@@ -809,7 +804,6 @@ def A10Deriv_eps(vk, epsilon):
     return (A10Deriv2ndPhase)# * np.exp(-1j * phi0)
 
 #### Phase uncertainty ####
-
 def phaseUncertainty(N: int, mu, alpha, alignWithXYPlane=False, 
                      NO_ADJ_CLASSES=False):
     """analytically calculated, secular-term-free phase uncertainty for an MZI 
@@ -892,7 +886,6 @@ def PScontributions(vk, epsilon):
     return np.array([f(vk, epsilon) for f in funcs])
 
 #### Weighting ####
-
 def wed_quantities(epsilon, sigma_vk):
     """weighting the functions collected by `PScontributions(vk, epsilon)` with 
     the initial momentum distribution of the atoms  
@@ -956,9 +949,7 @@ def weighting(epsilon_val, sigma_vk):
             wed_A10Deriv_0, wed_A10Deriv_eps = np.array(wed_results).T
 
 ############ Numerical results ############
-
 #### Bragg Hamiltonian ####
-
 def Hamiltonian(epsilon, vk):
     """Hamiltonian describing resonant first-order Bragg diffraction for system 
     with dimensionless time \lambda = time * \omega_k and initial laser pulse 
@@ -988,7 +979,6 @@ def Hamiltonian(epsilon, vk):
         ], dtype=complex)
 
 #### Phase uncertainty and its contributions A0, A10, R0, R10 ####
-
 def A0_num(tBp, rhoBp, tBm, rhoBm, rhoMp, rhoMm, as_deriv = False):
     """numerical calculation of the population-difference contribution to the 
     interference signal A0(vk,phi=0) or (if as_deriv) its derivative. 
@@ -1211,7 +1201,6 @@ def phaseUncertaintySQ_num(N: int, mu, alpha, alignWithXYPlane=False):
     )
 
 #### Complex ODE solver ####
-
 def dgdt(lmda, g, vk, epsilon, time_dep_pulse=False, lmda_final=0): 
     """right side of Heisenbergg equation of motion for resonant first-order 
     Bragg diffraction
@@ -1326,7 +1315,6 @@ def solve_ode(vk, epsilon, g0, time_dep_pulse=False, single_eval=False):
     return np.array([sol_blackman_BS.y[:,0], sol_blackman_MR.y[:,0]]).T
 
 #### Weighting ####
-
 def wed_quantities_num(epsilon, sigma_vk, time_dep_pulse):
     """weighting the functions collected by `PScontributions_num()` with 
     the initial momentum distribution of the atoms using `np.trapezoid()`
@@ -1405,7 +1393,6 @@ def weighting_num(epsilon_val, sigma_vk, parallelize, time_dep_pulse):
         wed_A0Deriv_num, wed_A10Deriv_num = np.array(wed_results).T
 
 #### no velocity selectivity ####
-
 def phaseUncertaintySQ_noVS(N: int, mu, alpha, alignWithXYPlane=False):
     """squared phase uncertainty for an MZI - with NO VELOCITY SELECTIVITY (VS) 
     present - that is driven by first-order Bragg diffraction and operated with 
@@ -1456,8 +1443,7 @@ def phaseUncertaintySQ_noVS(N: int, mu, alpha, alignWithXYPlane=False):
     )
 
 #### orientation/squeezing optimisation ####
-
-def orientation_opt_PS_SQ(N: int, mu, alpha_min, alpha_max, n_alpha):
+def orientation_opt_PS_SQ(N: int, mu, alpha_min, alpha_max, n_alpha, only_opt_values=True):
     """calls `phaseUncertainty()` for compensation-rotation angles alpha 
     between alpha_min and alpha_max and finds the minimum 
 
@@ -1473,6 +1459,11 @@ def orientation_opt_PS_SQ(N: int, mu, alpha_min, alpha_max, n_alpha):
         upper bound for alpha values
     n_alpha : int
         number of alpha values iterated over 
+    only_opt_values : bool
+        if True: only return optimized phase uncertainty values and 
+        corresponding inclination values. If False: additionally returns phase 
+        uncertainty values for all inclination values and returns inclination 
+        values, by default True 
 
     Returns
     -------
@@ -1490,9 +1481,14 @@ def orientation_opt_PS_SQ(N: int, mu, alpha_min, alpha_max, n_alpha):
 
     opt_inclination = alpha_values[alpha_opt_args] + alpha_0(N, mu)
 
-    return opt_inclination, optimised_PS
+    if only_opt_values:
+        return opt_inclination, optimised_PS
 
-def squeezing_opt_PS_SQ(N: int, mu_min, mu_max, n_mu, equator_phi=False):
+    inclination_vlaues = alpha_values + alpha_0(N, mu)
+
+    return opt_inclination, optimised_PS, inclination_vlaues, PS_values
+
+def squeezing_opt_PS_SQ(N: int, mu_min, mu_max, n_mu, equator_phi=False, only_opt_values=True):
     """calls `phaseUncertainty()` for twisting strengths mu 
     between mu_min and mu_max and finds the minimum. The compensation-rotation
     angle alpha is set to alpha=-alpha_0(N, mu=mu_opt(N)) for not equator_phi, 
@@ -1514,6 +1510,11 @@ def squeezing_opt_PS_SQ(N: int, mu_min, mu_max, n_mu, equator_phi=False):
     equator_phi : bool, optional
         determines whether alpha=-alpha_0(N, mu=mu_opt(N)) (False) or 
         alpha=alpha_0(N, mu_best) (True), by default False
+    only_opt_values : bool
+            if True: only return optimized phase uncertainty values and 
+            corresponding twisting values. If False: additionally returns phase 
+            uncertainty values for all twisting values and returns twisting 
+            values, by default True 
 
     Returns
     -------
@@ -1540,13 +1541,13 @@ def squeezing_opt_PS_SQ(N: int, mu_min, mu_max, n_mu, equator_phi=False):
     
     opt_twisting = mu_values[mu_opt_args]/2
 
-    return opt_twisting, optimised_PS
+    if only_opt_values:
+        return opt_twisting, optimised_PS
 
+    return opt_twisting, optimised_PS, mu_values, PS_values
 
 ############ Plotting ############
-
 #### Rabi cycle ####
-
 def plot_Rabi_cycle_momentum(epsilon, sigma_vk, time_dep_pulse=False):
     """plots a complete Rabi cycle in momentum space for an atom starting in 
     class n=0
@@ -1611,11 +1612,9 @@ def plot_Rabi_cycle_momentum(epsilon, sigma_vk, time_dep_pulse=False):
     cb.set_label('probability density')
     cb.ax.set_yticklabels([0,.6,1.2,1.8,2.4,3.0,3.6])
 
-    plt.savefig(im_path + "/Bragg_rabi_cycle.pdf")
-    plt.show()
+    plt.savefig(im_path + "/Bragg_rabi_cycle.pdf", dpi=800)
 
 #### cropped vs full signal ####
-
 def plot_cropped_vs_full_signal(epsilon, sigma_vk, T_Omega):
     """plots spatial distribution of atoms propagating through the MZI, as
     well as corresponding interference signals and phase uncertainties 
@@ -1975,7 +1974,7 @@ def plot_cropped_vs_full_signal(epsilon, sigma_vk, T_Omega):
     ############ plotting ############
 
     ### colormaps ###
-    orig_map=plt.cm.get_cmap('gist_heat')
+    orig_map=plt.get_cmap('gist_heat')
     reversed_cmap = orig_map.reversed()
 
     def alpha_fct(x,k=40):
@@ -2097,8 +2096,7 @@ def plot_cropped_vs_full_signal(epsilon, sigma_vk, T_Omega):
     cb.ax.xaxis.set_ticks_position('top')
     cb.ax.xaxis.set_label_position('top')
 
-    plt.savefig(im_path + '/full_vs_cropped_signal.pdf', bbox_inches='tight')
-    plt.show()
+    plt.savefig(im_path + '/full_vs_cropped_signal.pdf', bbox_inches='tight', dpi=800)
 
 #### plot quasi probability distribution on angular momenutm sphere
 def quasi_prob_contrib_k(k, j, m_values, phi, theta, psi_angular_coef):
@@ -2393,7 +2391,6 @@ def plot_ang_mom_sphere_QP_distr(N, psi_angular_coef_fct,
         fig.write_image(im_path + "/" + im_name + ".svg", width=850, height=600)
 
 #### plot analytics ####
-
 def plotPhaseUncertainty(sigma_values, N):
     """plots the `phaseUncertainty()` of the MZI driven by first-order Bragg 
     diffraction and operated with the OAT state polarized in S_x direction and
@@ -2489,11 +2486,9 @@ def plotPhaseUncertainty(sigma_values, N):
 
     ax.grid(ls='--',alpha=.5)
 
-    plt.savefig(im_path + "/PS_Bragg_VS_and_parasitic_diff.pdf", bbox_inches='tight')
-    # plt.show()
+    plt.savefig(im_path + "/PS_Bragg_0th_2nd_order_eps.pdf", bbox_inches='tight')
 
 #### plot analytical vs numerical solution ####
-
 def analytics_vs_numerics(sigma_vk, N):
     """plots the analytical `phaseUncertainty()` and the numerical expression
     `phaseUncertaintySQ_num()` as well as the residual between them 
@@ -2547,10 +2542,8 @@ def analytics_vs_numerics(sigma_vk, N):
     ax0.tick_params(labelbottom=False)
 
     plt.savefig(im_path + "/PS_Bragg_num_vs_ana.pdf", bbox_inches='tight')
-    # plt.show()
 
 #### box vs blackman pulses ####
-
 def blackman_vs_box_pulse(sigma_vk, N):
     """plots numerically calculated phase uncertainty `phaseUncertaintySQ_num()`
     for Blackman as well as box pulses for the OAT state 
@@ -2592,10 +2585,8 @@ def blackman_vs_box_pulse(sigma_vk, N):
                columnspacing=.6,
                handletextpad=.6)
     plt.savefig(im_path + "/PS_Bragg_box_vs_Blackman.pdf", bbox_inches='tight')
-    # plt.show()
 
 #### PS for CSS on equator ####
-
 def fock_state_after_BS(sigma_values, N):
     """plots phase uncertainty `phaseUncertainty()` for the CSS polarized along
     the S_x direction as well as for the OAT state rotated onto the equator
@@ -2664,10 +2655,8 @@ def fock_state_after_BS(sigma_values, N):
     
 
     plt.savefig(im_path + "/PS_Fock_state.pdf", bbox_inches='tight')
-    # plt.show()
 
 #### orientation and squeezing optimisation ####
-
 def plot_mu_awa_phi_opt_phaseUncertainty(sigma_vk, N, alpha_min, alpha_max, 
                                   mu_min, mu_max, n_steps):
     """plotting the phase uncertainty `phaseUncertainty()` separately minimized 
@@ -2748,7 +2737,127 @@ def plot_mu_awa_phi_opt_phaseUncertainty(sigma_vk, N, alpha_min, alpha_max,
                bbox_to_anchor=(0.3, 0), columnspacing=.5, handletextpad=.5)
 
     plt.savefig(im_path + "/PS_Bragg_mu_phi_optimised.pdf", bbox_inches='tight')
-    # plt.show()
+
+# density plots
+def density_plot_mu_awa_phi_opt_PU(sigma_vk, N, alpha_min, alpha_max, 
+                                  mu_min, mu_max, n_steps):
+    """creates a 2 density plots of the quantum enhanced phase uncertainty of 
+    the MZI driven with the OAT state. Top panel shows the phase uncertainty 
+    for different inclination values \varphi and coupling strengths \varepsilon 
+    as well as the location of minimal phase uncertainty (the twisting strength 
+    is set to the optimal value of an ideal MZI). The lower panel shows the phase 
+    uncertainty for different twisting strengths \chi and coupling strengths. 
+    Also here the miniumum is shown.
+    Blue dotted lines show the choice of optimal inclination an twisting for the 
+    idel MZI.
+
+    Parameters
+    ----------
+    sigma_vk : float
+        standard deviation of the momentum distribution in units of 
+        dimensionless doppler detuning (vk = \nu_k / \omega_k)
+    N : int
+        atom number
+    alpha_min : float
+        lower bound for the angle alpha for the optimization
+    alpha_max : float
+        upper bound for the angle alpha 
+    mu_min : float
+        lower bound for the twisting strength
+    mu_max : float
+        upper bound for the twisting strength
+    n_steps : int
+        steps iterated over between lower and upper bound for the alpha- and 
+        mu-optimization
+    """
+    mu_optimal = mu_opt(N)
+        
+    weighting(epsilon_val, sigma_vk)
+    opt_inclination_values, phi_opt_PS_SQ, inc_val, full_phi_PU_SQ = orientation_opt_PS_SQ(N, 
+                                                                                           mu_optimal,
+                                                                                           alpha_min,
+                                                                                           alpha_max,
+                                                                                           n_steps,
+                                                                                           only_opt_values=False)
+    opt_twisting_values, mu_opt_PS_SQ, mu_val, full_mu_PU_SQ = squeezing_opt_PS_SQ(N, 
+                                                                                   mu_min, 
+                                                                                   mu_max,
+                                                                                   n_steps,
+                                                                                   only_opt_values=False)
+
+    eps2D, inc2D = np.meshgrid(epsilon_val, inc_val)
+    
+    fig, (ax0, ax1) = plt.subplots(
+        2, 1,
+        figsize=(3.2, 2.6),
+        sharex=True,
+        gridspec_kw={'height_ratios': [1, 1], 'hspace': 0.0}
+    )
+
+    vmin = min((N * full_phi_PU_SQ).min(), (N * full_mu_PU_SQ).min())
+    vmax = max((N * full_phi_PU_SQ).max(), (N * full_mu_PU_SQ).max())
+    norm = mpl.colors.LogNorm(vmin=vmin, vmax=vmax)
+    levels = np.logspace(np.log10(vmin), np.log10(vmax), 200)
+
+    ax0.tick_params(labelbottom=False)
+    cf0 = ax0.contourf(eps2D, 
+                       inc2D, 
+                       N * full_phi_PU_SQ, 
+                       levels=levels, 
+                       norm=norm, 
+                       cmap='bone', 
+                       label=r"$\varphi$")
+    ax0.plot(epsilon_val[1:], opt_inclination_values[1:], 
+             color=green, label=r"optimized")
+    c0 = ax0.contour(eps2D, inc2D, N * full_phi_PU_SQ, levels=[1], label="SNL", linewidths=.6, colors=red, linestyles="-")
+    ax0.clabel(
+        c0, 
+        fmt={1: 'SNL'},
+        inline=True,
+        fontsize=9, 
+        colors=red,
+        manual=[(0.4, .06)],
+    )
+    ax0.plot(epsilon_val[1:], np.zeros_like(epsilon_val[1:]), 
+             color=blue, ls=(0, (1, 1)), label=r"$\varphi=0$")
+    ax0.set_ylabel(r"$\varphi$")
+    cf0.set_rasterized(True)
+
+    eps2D, mu2D = np.meshgrid(epsilon_val, mu_val)
+    cf1 = ax1.contourf(eps2D, 
+                       mu2D*1e3, 
+                       N * full_mu_PU_SQ, 
+                       levels=levels,
+                       norm=norm, 
+                       cmap='bone', 
+                       label=r"$\mu$")
+    c1 = ax1.contour(eps2D, mu2D*1e3, N * full_mu_PU_SQ, levels=[1], label="SNL", linewidths=.6, colors=red, linestyles="-")
+    ax0.clabel(
+        c1, 
+        fmt={1: 'SNL'},
+        inline=True,
+        fontsize=8, 
+        colors=red,
+        manual=[(0.33, 2)],
+    )
+    ax1.plot(epsilon_val, opt_twisting_values*1000, 
+                     color=orange, ls='--', label=r'optimized')
+    ax1.plot(epsilon_val, np.ones_like(epsilon_val) * mu_optimal/2*1000,
+                      color=blue, ls=(0, (1, 1)), 
+                      label=fr'$\chi_0 = {mu_optimal/2:.4f}$')
+    ax1.set_ylabel(r"$\chi\times10^{{3}}$")
+    ax1.set_xlabel(r"$\varepsilon$")
+    cf1.set_rasterized(True)
+    
+    cbar = fig.colorbar(
+        cf0, 
+        ax=[ax0, ax1], 
+        label=r"$N\Delta\phi^2$",
+        ticks=mpl.ticker.LogLocator(base=10.0, subs=(1.0,)),
+        pad=0.01
+    )
+
+    plt.savefig(im_path + "/PU_Bragg_mu_phi_optimised_density_plot.pdf", bbox_inches='tight', dpi=800)
 
 #### plot analytics vs numerics: couplings first-order Bragg ####
 def plot_pert_vs_numerics_couplings(epsilon, vk, tau_final, g0):
@@ -3016,7 +3125,6 @@ def plot_pert_vs_numerics_couplings(epsilon, vk, tau_final, g0):
     axes[2,0].minorticks_off()
 
     plt.savefig(im_path + "/pops_1stO_Bragg.pdf", bbox_inches="tight")
-    plt.show()
 
 
 ############ Run ############
@@ -3036,7 +3144,7 @@ if __name__ == '__main__': # this is required for multiprocessing...
     start = time.time()
 
     #### main text Fig. 1
-    plot_Rabi_cycle_momentum(epsilon=1.5, sigma_vk=.2,
+    plot_Rabi_cycle_momentum(epsilon=0.8, sigma_vk=.2,
                              time_dep_pulse=False)
 
 
@@ -3149,29 +3257,33 @@ if __name__ == '__main__': # this is required for multiprocessing...
     #                          fct_key="HusimiQ", 
     #                          im_name = 'twin_fock_HusimiQ')
 
-
     #### main text Fig. 5
     plotPhaseUncertainty(sigma_values=[.01, .02, .08], N=N)
-
 
     #### main text Fig. 6
     analytics_vs_numerics(sigma_vk=sigma_vk, N=N)
 
-
     #### main text Fig. 7
     blackman_vs_box_pulse(sigma_vk=sigma_vk, N=N)
-
 
     #### main text Fig. 8
     fock_state_after_BS(sigma_values=[.01, .02, .08], N=N)
 
-
     #### main text Fig. 9
-    plot_mu_awa_phi_opt_phaseUncertainty(sigma_vk=.01, N=N, alpha_min=-.06, 
+    plot_mu_awa_phi_opt_phaseUncertainty(sigma_vk=sigma_vk, N=N, alpha_min=-.06, 
                                          alpha_max=.07, mu_min=.0008, 
                                          mu_max=.0031, n_steps=2000)
 
-    #### Appendix Fig. 10
+    #### main text Fig. 10
+    density_plot_mu_awa_phi_opt_PU(sigma_vk=sigma_vk, 
+                                    N=N, 
+                                    alpha_min=-.07,
+                                    alpha_max=.08, 
+                                    mu_min=0.0,
+                                    mu_max=.0065,
+                                    n_steps=2000)
+
+    #### Appendix Fig. 11
     plot_pert_vs_numerics_couplings(epsilon=.2, vk=.04, tau_final=4 * np.pi,
                                     g0=np.array([0,0,0,1,0,0], dtype=complex))        
 
