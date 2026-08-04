@@ -1,6 +1,7 @@
 # Code Repository: Balancing Quasi-Bragg Regime and Velocity Selectivity in Quantum-Enhanced Atom Interferometry
 
 [![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.21786457-blue.svg)](https://doi.org/10.5281/zenodo.21786457)
+[![GitHub Repo](https://img.shields.io/badge/GitHub-Repository-blue?logo=github)](https://github.com/chrismk-ai/bragg-squeezing-mzi)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![License: CC BY 4.0](https://img.shields.io/badge/License-CC_BY_4.0-lightgrey.svg)](https://creativecommons.org/licenses/by/4.0/)
 
