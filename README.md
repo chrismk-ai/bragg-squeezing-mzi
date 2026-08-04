@@ -25,7 +25,7 @@ This repository contains the code to generate the data presented in the paper:
 
 ## Quick Start
 
-Clone the repository and install the dependencies listed in `requirements.txt` optionally to a virtual environment:
+Clone the repository and install the dependencies listed in `requirements.txt` (optionally to a virtual environment):
 
 ```bash
 # clone repo
