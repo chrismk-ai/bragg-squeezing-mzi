@@ -4,7 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![License: CC BY 4.0](https://img.shields.io/badge/License-CC_BY_4.0-lightgrey.svg)](https://creativecommons.org/licenses/by/4.0/)
 
-This repository contains the numerical simulation code to generate the data presented in the paper:
+This repository contains the code to generate the data presented in the paper:
 
 > **Balancing Quasi-Bragg Regime and Velocity Selectivity in Quantum-Enhanced Atom Interferometry**  
 > Published in *Physical Review Research*: [DOI: 10.1103/wr69-9hr5](https://doi.org/10.1103/wr69-9hr5)
