@@ -30,8 +30,8 @@ Clone the repository and install the dependencies listed in `requirements.txt` o
 
 ```bash
 # clone repo
-git clone [https://github.com/your-username/your-repo-name.git](https://github.com/your-username/your-repo-name.git)
-cd your-repo-name
+git clone [https://github.com/chrismk-ai/bragg-squeezing-mzi.git](https://github.com/chrismk-ai/bragg-squeezing-mzi.git)
+cd bragg-squeezing-mzi
 
 # generate venv
 python3 -m venv venv
