@@ -1,16 +1,41 @@
 # Code Repository: Balancing Quasi-Bragg Regime and Velocity Selectivity in Quantum-Enhanced Atom Interferometry
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.XXXXXXX.svg)](https://doi.org/10.5281/zenodo.XXXXXXX)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21786457.svg)](https://doi.org/10.5281/zenodo.21786457)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![License: CC BY 4.0](https://img.shields.io/badge/License-CC_BY_4.0-lightgrey.svg)](https://creativecommons.org/licenses/by/4.0/)
 
 This repository contains the numerical simulation code, data generation scripts, and plotting routines to reproduce all figures and key numerical results from the paper:
 
 > **Balancing Quasi-Bragg Regime and Velocity Selectivity in Quantum-Enhanced Atom Interferometry**  
-> *arXiv preprint:* [arXiv:2605.21643](https://arxiv.org/abs/2605.21643)
+> *publised in Phys. Rev. Research:* [here](https://doi.org/10.1103/wr69-9hr5)
 
 ---
 
 ## Repository Overview
 
-This library models the dynamics of momentum transfer, velocity selection, and phase sensitivity in atom interferometers utilizing spin-squeezed states and quasi-Bragg diffraction.
+* **`quantum_enhanced_Bragg_MZI.py`**  
+  Contains all the core methods required to generate the data shown in the [paper](https://doi.org/10.1103/wr69-9hr5). An exemplary execution of these methods is provided in the `if __name__ == "__main__":` block at the end of the file.
+  
+  > **Note on Parallelization:** Running the script via the `if __name__ == "__main__":` block is strictly required because several simulation methods utilize parallel processing (multiprocessing).
+
+* **`requirements.txt`**  
+  Lists all necessary Python packages and their respective versions required to run `quantum_enhanced_Bragg_MZI.py`.
+
+---
+
+## Quick Start
+
+### 1. Installation
+Clone the repository and install the dependencies listed in `requirements.txt` optionally to a virtual environment:
+
+```bash
+# clone repo
+git clone [https://github.com/your-username/your-repo-name.git](https://github.com/your-username/your-repo-name.git)
+cd your-repo-name
+
+# generate venv
+python3 -m venv venv
+source venv/bin/activate
+
+# install requrements
+pip install -r requirements.txt
